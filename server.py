@@ -15,6 +15,8 @@ from telethon.tl.types import User, Chat, Channel
 from config import API_ID, API_HASH, APP_NAME, SESSION_NAME, HOST, PORT
 
 ROOT = Path(__file__).parent
+AVATAR_DIR = ROOT / "static" / "avatars"
+AVATAR_DIR.mkdir(parents=True, exist_ok=True)
 
 client = TelegramClient(SESSION_NAME, API_ID, API_HASH)
 login_state = {
@@ -28,6 +30,7 @@ deleted_msgs = {}
 edits = defaultdict(list)
 ws_clients = set()
 _handlers_ready = False
+entity_cache = {}
 
 
 def entity_title(entity):
@@ -37,6 +40,28 @@ def entity_title(entity):
     if isinstance(entity, (Chat, Channel)):
         return entity.title or str(entity.id)
     return str(getattr(entity, "id", "?"))
+
+
+def entity_letter(name):
+    name = (name or "?").strip()
+    return name[0].upper() if name else "?"
+
+
+async def ensure_avatar(entity):
+    """Download profile photo once, return URL path or None."""
+    try:
+        eid = getattr(entity, "id", None)
+        if eid is None:
+            return None
+        path = AVATAR_DIR / f"{eid}.jpg"
+        if path.exists() and path.stat().st_size > 0:
+            return f"/static/avatars/{eid}.jpg"
+        result = await client.download_profile_photo(entity, file=str(path))
+        if result and path.exists() and path.stat().st_size > 0:
+            return f"/static/avatars/{eid}.jpg"
+    except Exception:
+        pass
+    return None
 
 
 def serialize_message(m, chat_id):
@@ -122,10 +147,25 @@ async def register_handlers():
 
 async def api_status(request):
     authorized = await client.is_user_authorized()
+    me = None
+    if authorized:
+        try:
+            u = await client.get_me()
+            av = await ensure_avatar(u)
+            me = {
+                "id": u.id,
+                "name": entity_title(u),
+                "username": u.username,
+                "avatar": av,
+                "letter": entity_letter(entity_title(u)),
+            }
+        except Exception:
+            pass
     return web.json_response({
         "app": APP_NAME,
         "authorized": authorized,
         "need_password": login_state["need_password"],
+        "me": me,
     })
 
 
@@ -140,20 +180,16 @@ async def api_send_code(request):
                 {"ok": False, "error": "Номер должен начинаться с + (например +79001234567)"},
                 status=400,
             )
-
         if not client.is_connected():
             await client.connect()
-
         result = await client.send_code_request(phone)
         login_state["phone"] = phone
         login_state["phone_code_hash"] = result.phone_code_hash
         login_state["need_password"] = False
-
         sent = getattr(result, "type", None)
-        hint = "Код отправлен. Открой Telegram на телефоне — код придёт туда (или SMS)."
+        hint = "Код отправлен. Смотри в Telegram на телефоне или SMS."
         if sent:
             hint = f"Код отправлен ({sent.__class__.__name__}). Смотри в Telegram / SMS."
-
         return web.json_response({"ok": True, "message": hint})
     except FloodWaitError as e:
         return web.json_response({"ok": False, "error": f"Подожди {e.seconds} сек."}, status=429)
@@ -166,15 +202,13 @@ async def api_sign_in(request):
         data = await request.json()
         code = (data.get("code") or "").strip()
         password = (data.get("password") or "").strip()
-
         if not client.is_connected():
             await client.connect()
 
         if login_state["need_password"] or password:
             if not password:
                 return web.json_response(
-                    {"ok": False, "error": "Введи пароль 2FA", "need_password": True},
-                    status=400,
+                    {"ok": False, "error": "Введи пароль 2FA", "need_password": True}, status=400
                 )
             await client.sign_in(password=password)
             login_state["need_password"] = False
@@ -188,9 +222,7 @@ async def api_sign_in(request):
 
         try:
             await client.sign_in(
-                login_state["phone"],
-                code,
-                phone_code_hash=login_state["phone_code_hash"],
+                login_state["phone"], code, phone_code_hash=login_state["phone_code_hash"]
             )
         except SessionPasswordNeededError:
             login_state["need_password"] = True
@@ -212,11 +244,22 @@ async def api_dialogs(request):
     if not await client.is_user_authorized():
         return web.json_response({"ok": False, "error": "Не авторизован"}, status=401)
     items = []
-    async for d in client.iter_dialogs(limit=100):
+    async for d in client.iter_dialogs(limit=120):
+        entity_cache[d.id] = d.entity
+        av = await ensure_avatar(d.entity)
+        name = d.name or entity_title(d.entity)
+        last = ""
+        if d.message and d.message.message:
+            last = d.message.message[:80]
+        elif d.message and d.message.media:
+            last = "Медиа"
         items.append({
             "id": d.id,
-            "name": d.name or entity_title(d.entity),
+            "name": name,
+            "letter": entity_letter(name),
+            "avatar": av,
             "unread": d.unread_count,
+            "last": last,
         })
     return web.json_response({"ok": True, "dialogs": items})
 
@@ -230,7 +273,7 @@ async def api_messages(request):
         return web.json_response({"ok": False, "error": "bad chat id"}, status=400)
 
     msgs = []
-    async for m in client.iter_messages(chat_id, limit=80):
+    async for m in client.iter_messages(chat_id, limit=100):
         msgs.append(serialize_message(m, m.chat_id))
     msgs.reverse()
 
@@ -260,6 +303,14 @@ async def api_send(request):
         return web.json_response({"ok": False, "error": "Пустое сообщение"}, status=400)
     m = await client.send_message(int(chat_id), text)
     return web.json_response({"ok": True, "message": serialize_message(m, m.chat_id)})
+
+
+async def api_logout(request):
+    try:
+        await client.log_out()
+    except Exception:
+        pass
+    return web.json_response({"ok": True})
 
 
 async def ws_handler(request):
@@ -298,6 +349,7 @@ def main():
     app.router.add_get("/api/dialogs", api_dialogs)
     app.router.add_get("/api/messages/{chat_id}", api_messages)
     app.router.add_post("/api/send", api_send)
+    app.router.add_post("/api/logout", api_logout)
     app.router.add_get("/ws", ws_handler)
     app.on_startup.append(on_startup)
     app.on_cleanup.append(on_cleanup)

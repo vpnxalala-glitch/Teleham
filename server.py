@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 """Teleham Web — local Telegram web client."""
 
-import asyncio
 import json
 from collections import defaultdict
 from datetime import datetime
@@ -18,18 +17,17 @@ from config import API_ID, API_HASH, APP_NAME, SESSION_NAME, HOST, PORT
 ROOT = Path(__file__).parent
 
 client = TelegramClient(SESSION_NAME, API_ID, API_HASH)
-# phone login state
 login_state = {
     "phone": None,
     "phone_code_hash": None,
     "need_password": False,
 }
 
-# (chat_id, msg_id) -> text
 msg_cache = {}
-deleted_msgs = {}  # (chat_id, msg_id) -> {text, date}
-edits = defaultdict(list)  # (chat_id, msg_id) -> [old texts]
+deleted_msgs = {}
+edits = defaultdict(list)
 ws_clients = set()
+_handlers_ready = False
 
 
 def entity_title(entity):
@@ -75,6 +73,11 @@ async def broadcast(event_type, data):
 
 
 async def register_handlers():
+    global _handlers_ready
+    if _handlers_ready:
+        return
+    _handlers_ready = True
+
     @client.on(events.NewMessage)
     async def on_new(event):
         chat_id = event.chat_id
@@ -88,7 +91,6 @@ async def register_handlers():
     @client.on(events.MessageDeleted)
     async def on_deleted(event):
         for msg_id in event.deleted_ids:
-            # find in cache
             for (cid, mid), text in list(msg_cache.items()):
                 if mid == msg_id:
                     deleted_msgs[(cid, mid)] = {
@@ -134,7 +136,10 @@ async def api_send_code(request):
         if not phone:
             return web.json_response({"ok": False, "error": "Введи номер телефона"}, status=400)
         if not phone.startswith("+"):
-            return web.json_response({"ok": False, "error": "Номер должен начинаться с + (например +79001234567)"}, status=400)
+            return web.json_response(
+                {"ok": False, "error": "Номер должен начинаться с + (например +79001234567)"},
+                status=400,
+            )
 
         if not client.is_connected():
             await client.connect()
@@ -144,11 +149,10 @@ async def api_send_code(request):
         login_state["phone_code_hash"] = result.phone_code_hash
         login_state["need_password"] = False
 
-        # type of code delivery
         sent = getattr(result, "type", None)
-        hint = "Код отправлен. Проверь Telegram или SMS."
+        hint = "Код отправлен. Открой Telegram на телефоне — код придёт туда (или SMS)."
         if sent:
-            hint = f"Код отправлен ({sent.__class__.__name__}). Проверь Telegram / SMS."
+            hint = f"Код отправлен ({sent.__class__.__name__}). Смотри в Telegram / SMS."
 
         return web.json_response({"ok": True, "message": hint})
     except FloodWaitError as e:
@@ -168,9 +172,13 @@ async def api_sign_in(request):
 
         if login_state["need_password"] or password:
             if not password:
-                return web.json_response({"ok": False, "error": "Введи пароль 2FA", "need_password": True}, status=400)
+                return web.json_response(
+                    {"ok": False, "error": "Введи пароль 2FA", "need_password": True},
+                    status=400,
+                )
             await client.sign_in(password=password)
             login_state["need_password"] = False
+            await register_handlers()
             return web.json_response({"ok": True, "message": "Вход выполнен"})
 
         if not login_state["phone"] or not login_state["phone_code_hash"]:
@@ -186,10 +194,13 @@ async def api_sign_in(request):
             )
         except SessionPasswordNeededError:
             login_state["need_password"] = True
-            return web.json_response({"ok": False, "error": "Нужен пароль двухэтапной проверки", "need_password": True})
+            return web.json_response(
+                {"ok": False, "error": "Нужен пароль двухэтапной проверки", "need_password": True}
+            )
         except PhoneCodeInvalidError:
             return web.json_response({"ok": False, "error": "Неверный код"}, status=400)
 
+        await register_handlers()
         return web.json_response({"ok": True, "message": "Вход выполнен"})
     except FloodWaitError as e:
         return web.json_response({"ok": False, "error": f"Подожди {e.seconds} сек."}, status=429)
@@ -223,9 +234,8 @@ async def api_messages(request):
         msgs.append(serialize_message(m, m.chat_id))
     msgs.reverse()
 
-    # append deleted for this chat
     for (cid, mid), info in deleted_msgs.items():
-        if cid == chat_id or str(cid) == str(chat_id):
+        if cid == chat_id:
             msgs.append({
                 "id": mid,
                 "out": False,

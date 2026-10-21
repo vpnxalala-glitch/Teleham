@@ -1,5 +1,6 @@
-# Teleham config
 API_ID = 35718780
 API_HASH = "a6e87b4b60d43b37a762310716537fc0"
 APP_NAME = "Teleham"
 SESSION_NAME = "teleham"
+HOST = "127.0.0.1"
+PORT = 8080

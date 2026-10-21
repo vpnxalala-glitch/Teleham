@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Teleham</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;font-family:Segoe UI,Roboto,Arial,sans-serif;background:#0e1621;color:#fff;overflow:hidden}
+#app{display:flex;height:100vh}
+
+/* login */
+#login{position:fixed;inset:0;background:#0e1621;display:flex;align-items:center;justify-content:center;z-index:50}
+.login-box{width:360px;background:#17212b;border-radius:12px;padding:32px 28px;box-shadow:0 8px 32px rgba(0,0,0,.4)}
+.login-box h1{font-size:24px;margin-bottom:6px;text-align:center}
+.login-box p{color:#708499;font-size:13px;text-align:center;margin-bottom:20px}
+.login-box input{width:100%;background:#242f3d;border:1px solid #0e1621;border-radius:8px;padding:12px 14px;color:#fff;font-size:14px;margin-bottom:10px;outline:none}
+.login-box input:focus{border-color:#2AABEE}
+.login-box button{width:100%;background:#2AABEE;border:none;border-radius:8px;padding:12px;color:#fff;font-weight:600;font-size:14px;cursor:pointer;margin-top:4px}
+.login-box button:hover{background:#229ED9}
+.login-box button.secondary{background:#242f3d;margin-top:8px}
+#login-err{color:#e53935;font-size:13px;min-height:18px;margin-top:10px;text-align:center}
+
+/* sidebar */
+#sidebar{width:340px;min-width:280px;background:#17212b;display:flex;flex-direction:column;border-right:1px solid #0e1621}
+#side-head{padding:14px 16px;font-weight:700;font-size:16px;border-bottom:1px solid #0e1621;display:flex;align-items:center;justify-content:space-between}
+#side-head span{color:#2AABEE;font-size:12px;font-weight:500}
+#dialogs{flex:1;overflow-y:auto}
+.dialog{padding:12px 16px;cursor:pointer;border-bottom:1px solid rgba(0,0,0,.15);display:flex;align-items:center;gap:12px}
+.dialog:hover,.dialog.active{background:#202b36}
+.avatar{width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,#2AABEE,#668bc4);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:18px;flex-shrink:0}
+.d-meta{flex:1;min-width:0}
+.d-name{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.d-unread{background:#2AABEE;color:#fff;border-radius:10px;padding:1px 7px;font-size:11px;font-weight:700}
+
+/* chat */
+#main{flex:1;display:flex;flex-direction:column;position:relative;background:#0e1621}
+#chat-head{padding:12px 18px;background:#17212b;border-bottom:1px solid #0e1621;font-weight:600;z-index:2}
+#messages{flex:1;overflow-y:auto;padding:16px;position:relative;z-index:2}
+.msg{max-width:70%;margin:4px 0;padding:8px 12px;border-radius:12px;font-size:14px;line-height:1.4;position:relative}
+.msg.in{background:#182533;align-self:flex-start;border-bottom-left-radius:4px;margin-right:auto}
+.msg.out{background:#2b5278;align-self:flex-end;border-bottom-right-radius:4px;margin-left:auto}
+.msg.deleted{background:#3a1c1c;border:1px solid #e53935;opacity:.9}
+.msg .meta{font-size:11px;color:#8b9aab;margin-bottom:3px}
+.msg .edit-hist{font-size:11px;color:#ffb74d;margin-top:4px}
+.msg .del-badge{color:#ef5350;font-size:11px;font-weight:700;margin-bottom:3px}
+#composer{display:flex;gap:8px;padding:10px 14px;background:#17212b;border-top:1px solid #0e1621;z-index:2}
+#composer input{flex:1;background:#242f3d;border:none;border-radius:20px;padding:12px 16px;color:#fff;font-size:14px;outline:none}
+#composer button{background:#2AABEE;border:none;border-radius:20px;padding:0 20px;color:#fff;font-weight:600;cursor:pointer}
+
+#empty{flex:1;display:flex;align-items:center;justify-content:center;color:#708499;z-index:2}
+
+/* snow */
+#snow{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:1}
+.flake{position:absolute;background:#fff;border-radius:50%;opacity:.55;animation:fall linear infinite}
+@keyframes fall{0%{transform:translateY(-10px) translateX(0)}100%{transform:translateY(110vh) translateX(20px)}}
+
+#messages-wrap{flex:1;display:flex;flex-direction:column;position:relative;min-height:0}
+#msg-list{display:flex;flex-direction:column}
+</style>
+</head>
+<body>
+<div id="login">
+  <div class="login-box">
+    <h1>Teleham</h1>
+    <p>Войди через номер Telegram</p>
+    <input id="phone" type="tel" placeholder="+79001234567" autocomplete="tel"/>
+    <button id="btn-code" onclick="sendCode()">Получить код</button>
+    <input id="code" type="text" placeholder="Код из Telegram / SMS" style="display:none;margin-top:10px"/>
+    <input id="password" type="password" placeholder="Пароль 2FA" style="display:none"/>
+    <button id="btn-login" class="secondary" onclick="signIn()" style="display:none">Войти</button>
+    <div id="login-err"></div>
+  </div>
+</div>
+
+<div id="app" style="display:none">
+  <div id="sidebar">
+    <div id="side-head">Teleham <span id="online">online</span></div>
+    <div id="dialogs"></div>
+  </div>
+  <div id="main">
+    <div id="chat-head">Выбери чат</div>
+    <div id="messages-wrap">
+      <div id="snow"></div>
+      <div id="messages"><div id="msg-list"></div></div>
+    </div>
+    <div id="composer" style="display:none">
+      <input id="text" placeholder="Сообщение" autocomplete="off"/>
+      <button onclick="sendMsg()">➤</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let currentChat = null;
+let codeRequested = false;
+
+function snow() {
+  const box = document.getElementById('snow');
+  box.innerHTML = '';
+  for (let i = 0; i < 45; i++) {
+    const f = document.createElement('div');
+    f.className = 'flake';
+    const s = 1.5 + Math.random() * 3;
+    f.style.width = s + 'px';
+    f.style.height = s + 'px';
+    f.style.left = Math.random() * 100 + '%';
+    f.style.animationDuration = (6 + Math.random() * 10) + 's';
+    f.style.animationDelay = (-Math.random() * 12) + 's';
+    f.style.opacity = 0.3 + Math.random() * 0.5;
+    box.appendChild(f);
+  }
+}
+
+async function api(path, opts) {
+  const r = await fetch(path, {
+    headers: {'Content-Type': 'application/json'},
+    ...opts
+  });
+  return r.json();
+}
+
+function showErr(t) {
+  document.getElementById('login-err').textContent = t || '';
+}
+
+async function checkStatus() {
+  const s = await api('/api/status');
+  if (s.authorized) {
+    document.getElementById('login').style.display = 'none';
+    document.getElementById('app').style.display = 'flex';
+    snow();
+    loadDialogs();
+    connectWs();
+  }
+}
+
+async function sendCode() {
+  showErr('');
+  const phone = document.getElementById('phone').value.trim();
+  const res = await api('/api/send_code', {method:'POST', body: JSON.stringify({phone})});
+  if (!res.ok) { showErr(res.error); return; }
+  codeRequested = true;
+  document.getElementById('code').style.display = 'block';
+  document.getElementById('btn-login').style.display = 'block';
+  showErr(res.message || 'Код отправлен — смотри в Telegram');
+  document.getElementById('login-err').style.color = '#8b9aab';
+}
+
+async function signIn() {
+  showErr('');
+  document.getElementById('login-err').style.color = '#e53935';
+  const code = document.getElementById('code').value.trim();
+  const password = document.getElementById('password').value.trim();
+  const res = await api('/api/sign_in', {method:'POST', body: JSON.stringify({code, password})});
+  if (res.need_password) {
+    document.getElementById('password').style.display = 'block';
+    showErr(res.error || 'Нужен пароль 2FA');
+    return;
+  }
+  if (!res.ok) { showErr(res.error); return; }
+  location.reload();
+}
+
+async function loadDialogs() {
+  const res = await api('/api/dialogs');
+  if (!res.ok) return;
+  const box = document.getElementById('dialogs');
+  box.innerHTML = '';
+  res.dialogs.forEach(d => {
+    const el = document.createElement('div');
+    el.className = 'dialog' + (currentChat === d.id ? ' active' : '');
+    const letter = (d.name || '?')[0].toUpperCase();
+    el.innerHTML = `<div class="avatar">${letter}</div>
+      <div class="d-meta"><div class="d-name">${escapeHtml(d.name)}</div></div>
+      ${d.unread ? `<div class="d-unread">${d.unread}</div>` : ''}`;
+    el.onclick = () => openChat(d.id, d.name);
+    box.appendChild(el);
+  });
+}
+
+async function openChat(id, name) {
+  currentChat = id;
+  document.getElementById('chat-head').textContent = name;
+  document.getElementById('composer').style.display = 'flex';
+  document.querySelectorAll('.dialog').forEach(el => el.classList.remove('active'));
+  loadDialogs();
+  const res = await api('/api/messages/' + id);
+  const list = document.getElementById('msg-list');
+  list.innerHTML = '';
+  if (!res.ok) return;
+  res.messages.forEach(m => list.appendChild(renderMsg(m)));
+  const sc = document.getElementById('messages');
+  sc.scrollTop = sc.scrollHeight;
+}
+
+function renderMsg(m) {
+  const el = document.createElement('div');
+  el.className = 'msg ' + (m.out ? 'out' : 'in') + (m.deleted ? ' deleted' : '');
+  el.dataset.id = m.id;
+  let html = '';
+  if (m.deleted) html += `<div class="del-badge">🗑 Удалено</div>`;
+  const time = m.date ? new Date(m.date * 1000).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) : '';
+  html += `<div class="meta">${m.out ? 'Вы' : 'Собеседник'} · ${time}${m.edited ? ' · изменено' : ''}</div>`;
+  html += `<div>${escapeHtml(m.media ? m.media + ' ' : '')}${escapeHtml(m.text || '')}</div>`;
+  if (m.edit_history && m.edit_history.length) {
+    html += `<div class="edit-hist">Было: ${escapeHtml(m.edit_history.slice(-3).join(' ← '))}</div>`;
+  }
+  el.innerHTML = html;
+  return el;
+}
+
+async function sendMsg() {
+  const input = document.getElementById('text');
+  const text = input.value.trim();
+  if (!text || !currentChat) return;
+  input.value = '';
+  const res = await api('/api/send', {method:'POST', body: JSON.stringify({chat_id: currentChat, text})});
+  if (res.ok && res.message) {
+    document.getElementById('msg-list').appendChild(renderMsg(res.message));
+    const sc = document.getElementById('messages');
+    sc.scrollTop = sc.scrollHeight;
+  }
+}
+
+document.getElementById('text').addEventListener('keydown', e => {
+  if (e.key === 'Enter') sendMsg();
+});
+
+function escapeHtml(s) {
+  return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function connectWs() {
+  const proto = location.protocol === 'https:' ? 'wss' : 'ws';
+  const ws = new WebSocket(`${proto}://${location.host}/ws`);
+  ws.onmessage = (ev) => {
+    let msg;
+    try { msg = JSON.parse(ev.data); } catch { return; }
+    if (msg.type === 'new_message' && msg.data.chat_id == currentChat) {
+      document.getElementById('msg-list').appendChild(renderMsg(msg.data.message));
+      const sc = document.getElementById('messages');
+      sc.scrollTop = sc.scrollHeight;
+    }
+    if (msg.type === 'deleted_message' && currentChat) {
+      openChat(currentChat, document.getElementById('chat-head').textContent);
+    }
+    if (msg.type === 'edited_message' && msg.data.chat_id == currentChat) {
+      openChat(currentChat, document.getElementById('chat-head').textContent);
+    }
+  };
+  ws.onclose = () => setTimeout(connectWs, 2000);
+}
+
+checkStatus();
+</script>
+</body>
+</html>

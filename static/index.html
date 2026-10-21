@@ -5,218 +5,185 @@
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>Teleham</title>
 <style>
-:root{
-  --bg:#0e1621;
-  --panel:#17212b;
-  --panel2:#232e3c;
-  --hover:#202b36;
-  --active:#2b5278;
-  --blue:#2AABEE;
-  --blue-d:#1e96d1;
-  --text:#f5f5f5;
-  --muted:#708499;
-  --out:#2b5278;
-  --in:#182533;
-  --danger:#e53935;
-  --warn:#ffb74d;
-  --green:#4fae4e;
-  --divider:#0e1621;
-}
+:root{--bg:#0e1621;--panel:#17212b;--panel2:#232e3c;--hover:#202b36;--active:#2b5278;--blue:#2AABEE;--blue-d:#1e96d1;--text:#f5f5f5;--muted:#708499;--out:#2b5278;--in:#182533;--danger:#e53935;--warn:#ffb74d;--green:#4fae4e;--divider:#0e1621}
 *{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%;font-family:"Roboto","Segoe UI",system-ui,sans-serif;background:var(--bg);color:var(--text);overflow:hidden;-webkit-font-smoothing:antialiased}
+html,body{height:100%;font-family:Roboto,"Segoe UI",system-ui,sans-serif;background:var(--bg);color:var(--text);overflow:hidden}
 button,input{font-family:inherit}
-
-/* ===== LOGIN (как Telegram) ===== */
 #login{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:100}
 .login-box{width:min(360px,92vw);text-align:center}
-.login-logo{width:160px;height:160px;margin:0 auto 28px;border-radius:50%;background:linear-gradient(160deg,#2AABEE 0%,#229ED9 40%,#1c8fc7 100%);display:flex;align-items:center;justify-content:center;box-shadow:0 12px 40px rgba(42,171,238,.25)}
-.login-logo span{font-size:64px;font-weight:300;color:#fff;letter-spacing:-2px}
-.login-box h1{font-size:32px;font-weight:500;margin-bottom:8px}
-.login-box .sub{color:var(--muted);font-size:14px;line-height:1.45;margin-bottom:28px}
-.login-box input{width:100%;background:var(--panel);border:none;border-radius:10px;padding:16px 18px;color:var(--text);font-size:16px;margin-bottom:12px;outline:none}
+.login-logo{width:150px;height:150px;margin:0 auto 24px;border-radius:50%;background:linear-gradient(160deg,#2AABEE,#1c8fc7);display:flex;align-items:center;justify-content:center;box-shadow:0 12px 40px rgba(42,171,238,.25)}
+.login-logo span{font-size:60px;font-weight:300;color:#fff}
+.login-box h1{font-size:30px;font-weight:500;margin-bottom:8px}
+.login-box .sub{color:var(--muted);font-size:14px;line-height:1.45;margin-bottom:24px}
+.login-box input{width:100%;background:var(--panel);border:none;border-radius:10px;padding:15px 16px;color:var(--text);font-size:16px;margin-bottom:10px;outline:none}
 .login-box input:focus{box-shadow:inset 0 0 0 2px var(--blue)}
-.login-box .btn{width:100%;background:var(--blue);border:none;border-radius:10px;padding:14px;color:#fff;font-weight:500;font-size:15px;cursor:pointer;margin-top:4px}
+.login-box .btn{width:100%;background:var(--blue);border:none;border-radius:10px;padding:13px;color:#fff;font-weight:500;font-size:15px;cursor:pointer;margin-top:4px}
 .login-box .btn:hover{background:var(--blue-d)}
-.login-box .btn.ghost{background:transparent;color:var(--blue);margin-top:8px}
-#login-err{color:var(--danger);font-size:13px;min-height:20px;margin-top:14px}
-
-/* ===== APP ===== */
+#login-err{color:var(--danger);font-size:13px;min-height:20px;margin-top:12px}
 #app{display:none;height:100vh}
-
-/* sidebar */
-#sidebar{width:26.5%;min-width:320px;max-width:420px;background:var(--panel);display:flex;flex-direction:column;border-right:1px solid var(--divider)}
-#side-head{height:56px;padding:0 12px 0 16px;display:flex;align-items:center;gap:10px;background:var(--panel)}
-.me-av{width:40px;height:40px;border-radius:50%;background:var(--blue);display:flex;align-items:center;justify-content:center;font-weight:500;font-size:15px;overflow:hidden;flex-shrink:0;cursor:pointer}
+#sidebar{width:28%;min-width:300px;max-width:420px;background:var(--panel);display:flex;flex-direction:column;border-right:1px solid var(--divider)}
+#side-head{height:56px;padding:0 10px 0 14px;display:flex;align-items:center;gap:10px}
+.me-av{width:40px;height:40px;border-radius:50%;background:var(--blue);display:flex;align-items:center;justify-content:center;font-weight:500;overflow:hidden;flex-shrink:0;cursor:pointer}
 .me-av img{width:100%;height:100%;object-fit:cover}
-.side-title{flex:1;min-width:0}
-.side-title b{display:block;font-size:15px;font-weight:500}
-.side-title span{font-size:12px;color:var(--green)}
-.icon-btn{width:40px;height:40px;border-radius:50%;border:none;background:transparent;color:var(--muted);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.side-title{flex:1;min-width:0}.side-title b{display:block;font-size:15px;font-weight:500}.side-title span{font-size:12px;color:var(--green)}
+.icon-btn{width:38px;height:38px;border-radius:50%;border:none;background:transparent;color:var(--muted);font-size:17px;cursor:pointer}
 .icon-btn:hover{background:var(--hover);color:var(--text)}
-
-#search-wrap{padding:6px 10px 10px}
-#search{width:100%;background:var(--bg);border:none;border-radius:20px;padding:9px 16px;color:var(--text);font-size:14px;outline:none}
-#search::placeholder{color:var(--muted)}
-
+#search-wrap{padding:6px 10px 8px}
+#search{width:100%;background:var(--bg);border:none;border-radius:20px;padding:9px 14px;color:var(--text);font-size:14px;outline:none}
 #dialogs{flex:1;overflow-y:auto}
-.dialog{height:72px;padding:0 12px;cursor:pointer;display:flex;align-items:center;gap:12px;transition:background .1s}
-.dialog:hover{background:var(--hover)}
-.dialog.active{background:var(--active)}
+.dialog{height:70px;padding:0 10px;cursor:pointer;display:flex;align-items:center;gap:10px}
+.dialog:hover{background:var(--hover)}.dialog.active{background:var(--active)}
 .dialog.active .d-last,.dialog.active .d-name,.dialog.active .d-time{color:#fff}
 .dialog.active .d-unread{background:#fff;color:var(--blue)}
-.av{width:54px;height:54px;border-radius:50%;background:linear-gradient(145deg,#5b9bc4,#2AABEE);display:flex;align-items:center;justify-content:center;font-weight:500;font-size:20px;flex-shrink:0;overflow:hidden}
+.av{width:52px;height:52px;border-radius:50%;background:linear-gradient(145deg,#5b9bc4,#2AABEE);display:flex;align-items:center;justify-content:center;font-weight:500;font-size:18px;flex-shrink:0;overflow:hidden}
 .av img{width:100%;height:100%;object-fit:cover}
-.d-meta{flex:1;min-width:0;padding:12px 0;border-bottom:1px solid rgba(0,0,0,.12)}
-.dialog:last-child .d-meta{border-bottom:none}
-.d-top{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.d-meta{flex:1;min-width:0;padding:10px 0;border-bottom:1px solid rgba(0,0,0,.1)}
+.d-top{display:flex;justify-content:space-between;gap:6px}
 .d-name{font-size:15px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .d-time{font-size:12px;color:var(--muted);flex-shrink:0}
-.d-bottom{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:3px}
-.d-last{font-size:14px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1}
-.d-unread{background:var(--blue);color:#fff;border-radius:12px;padding:1px 7px;font-size:12px;font-weight:500;min-width:20px;text-align:center;flex-shrink:0}
-
-/* main */
+.d-bottom{display:flex;justify-content:space-between;align-items:center;gap:6px;margin-top:2px}
+.d-last{font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1}
+.d-unread{background:var(--blue);color:#fff;border-radius:11px;padding:1px 7px;font-size:12px;font-weight:500;min-width:20px;text-align:center}
+.pin{font-size:11px;opacity:.7;margin-right:4px}
 #main{flex:1;display:flex;flex-direction:column;min-width:0;background:var(--bg);position:relative}
-#chat-head{height:56px;padding:0 16px;background:var(--panel);display:none;align-items:center;gap:12px;z-index:5;box-shadow:0 1px 2px rgba(0,0,0,.12)}
-#chat-head .av{width:42px;height:42px;font-size:16px}
+#chat-head{height:56px;padding:0 12px;background:var(--panel);display:none;align-items:center;gap:10px;z-index:5;box-shadow:0 1px 2px rgba(0,0,0,.12);cursor:pointer}
+#chat-head .av{width:40px;height:40px;font-size:15px}
 #chat-head .info{flex:1;min-width:0}
 #chat-head .info b{display:block;font-size:15px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #chat-head .info span{font-size:13px;color:var(--muted)}
-
+#chat-tools{display:flex;gap:2px}
 #messages-wrap{flex:1;display:flex;flex-direction:column;position:relative;min-height:0}
-/* wallpaper like TG */
-#messages-wrap::before{content:"";position:absolute;inset:0;background:
-  radial-gradient(ellipse at 20% 30%,rgba(42,171,238,.04) 0%,transparent 50%),
-  radial-gradient(ellipse at 80% 70%,rgba(42,171,238,.03) 0%,transparent 45%),
-  var(--bg);z-index:0}
+#messages-wrap::before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at 20% 30%,rgba(42,171,238,.04),transparent 50%),var(--bg);z-index:0}
 #snow{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:1}
-.flake{position:absolute;background:#fff;border-radius:50%;opacity:.55;animation:fall linear infinite}
-@keyframes fall{0%{transform:translateY(-10px) rotate(0)}100%{transform:translateY(110vh) translateX(24px) rotate(40deg)}}
-
-#empty{flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px;color:var(--muted);z-index:2;position:relative}
-#empty .pill{background:rgba(24,37,51,.85);padding:8px 16px;border-radius:20px;font-size:14px}
-
-#messages{flex:1;overflow-y:auto;padding:8px 16px 12px;position:relative;z-index:2;display:none}
-#msg-list{display:flex;flex-direction:column;gap:2px;min-height:100%;justify-content:flex-end}
-
-.date-sep{align-self:center;background:rgba(24,37,51,.75);color:var(--text);font-size:13px;padding:4px 12px;border-radius:12px;margin:10px 0 6px;backdrop-filter:blur(4px)}
-
-.msg{max-width:min(65%,480px);padding:6px 10px 4px;border-radius:12px;font-size:15px;line-height:1.35;position:relative;word-wrap:break-word}
-.msg.in{background:var(--in);align-self:flex-start;border-top-left-radius:12px;border-top-right-radius:12px;border-bottom-right-radius:12px;border-bottom-left-radius:4px;margin-right:auto}
-.msg.out{background:var(--out);align-self:flex-end;border-top-left-radius:12px;border-top-right-radius:12px;border-bottom-left-radius:12px;border-bottom-right-radius:4px;margin-left:auto}
+.flake{position:absolute;background:#fff;border-radius:50%;opacity:.5;animation:fall linear infinite}
+@keyframes fall{0%{transform:translateY(-10px)}100%{transform:translateY(110vh) translateX(20px)}}
+#empty{flex:1;display:flex;align-items:center;justify-content:center;z-index:2;position:relative}
+#empty .pill{background:rgba(24,37,51,.85);padding:8px 16px;border-radius:20px;font-size:14px;color:var(--muted)}
+#messages{flex:1;overflow-y:auto;padding:8px 14px 10px;position:relative;z-index:2;display:none}
+#msg-list{display:flex;flex-direction:column;gap:3px;min-height:100%;justify-content:flex-end}
+.date-sep{align-self:center;background:rgba(24,37,51,.8);font-size:13px;padding:3px 12px;border-radius:12px;margin:8px 0 4px}
+.msg{max-width:min(68%,500px);padding:6px 10px 4px;border-radius:12px;font-size:15px;line-height:1.35;position:relative;word-wrap:break-word;cursor:pointer}
+.msg.in{background:var(--in);align-self:flex-start;border-bottom-left-radius:4px;margin-right:auto}
+.msg.out{background:var(--out);align-self:flex-end;border-bottom-right-radius:4px;margin-left:auto}
 .msg.deleted{background:#3d1f24;box-shadow:inset 0 0 0 1px rgba(229,57,53,.4)}
-.msg .del-badge{color:#ff8a80;font-size:12px;font-weight:500;margin-bottom:2px;display:flex;align-items:center;gap:4px}
+.msg .del-badge{color:#ff8a80;font-size:12px;font-weight:500;margin-bottom:2px}
+.msg .reply-box{border-left:2px solid var(--blue);padding:2px 0 2px 8px;margin-bottom:4px;font-size:13px;color:var(--muted)}
+.msg .reply-box b{color:var(--blue);font-weight:500;display:block;font-size:12px}
+.msg .fwd{font-size:12px;color:var(--blue);margin-bottom:2px}
+.msg img.photo{max-width:100%;border-radius:8px;margin:4px 0;display:block;max-height:280px}
+.msg .file{background:rgba(0,0,0,.2);border-radius:8px;padding:8px 10px;margin:4px 0;font-size:13px}
 .msg .edit-hist{font-size:12px;color:var(--warn);margin-top:3px;padding-top:3px;border-top:1px solid rgba(255,183,77,.2)}
 .msg .foot{display:flex;justify-content:flex-end;align-items:center;gap:4px;margin-top:2px}
-.msg .time{font-size:11px;color:var(--muted)}
-.msg.out .time{color:#91aabf}
-.msg .edited-mark{font-size:11px;color:var(--muted);font-style:italic}
-.msg.out .edited-mark{color:#91aabf}
-
-#composer{display:none;padding:8px 12px 10px;background:var(--panel);align-items:flex-end;gap:8px;z-index:5}
-#composer input{flex:1;background:var(--bg);border:none;border-radius:20px;padding:11px 16px;color:var(--text);font-size:15px;outline:none;max-height:120px}
-#composer button{width:44px;height:44px;border-radius:50%;border:none;background:var(--blue);color:#fff;font-size:18px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center}
-#composer button:hover{background:var(--blue-d)}
-
-/* settings */
+.msg .time{font-size:11px;color:var(--muted)}.msg.out .time{color:#91aabf}
+.msg .edited-mark{font-size:11px;font-style:italic;color:var(--muted)}.msg.out .edited-mark{color:#91aabf}
+.msg a{color:var(--blue)}
+#reply-bar{display:none;padding:8px 14px;background:var(--panel2);border-top:1px solid var(--divider);align-items:center;gap:10px;z-index:5}
+#reply-bar .rb-text{flex:1;font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#reply-bar .rb-text b{color:var(--blue);display:block;font-size:12px}
+#composer{display:none;padding:8px 10px 10px;background:var(--panel);align-items:flex-end;gap:6px;z-index:5}
+#composer input[type=text]{flex:1;background:var(--bg);border:none;border-radius:20px;padding:11px 14px;color:var(--text);font-size:15px;outline:none}
+#composer button,#composer label.attach{width:42px;height:42px;border-radius:50%;border:none;background:var(--blue);color:#fff;font-size:17px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+label.attach{background:var(--panel2);color:var(--muted)}
+label.attach:hover{color:var(--text)}
+#scroll-down{position:absolute;right:18px;bottom:80px;width:42px;height:42px;border-radius:50%;border:none;background:var(--panel);color:var(--text);font-size:18px;cursor:pointer;z-index:6;box-shadow:0 2px 8px rgba(0,0,0,.3);display:none}
+#chat-search{display:none;padding:8px 12px;background:var(--panel);border-bottom:1px solid var(--divider);gap:8px;align-items:center;z-index:5}
+#chat-search input{flex:1;background:var(--bg);border:none;border-radius:16px;padding:8px 12px;color:var(--text);outline:none}
+#info-panel{position:fixed;top:0;right:0;width:min(360px,100%);height:100%;background:var(--panel);z-index:70;transform:translateX(100%);transition:.25s;box-shadow:-8px 0 24px rgba(0,0,0,.3);padding:20px;overflow-y:auto}
+#info-panel.open{transform:translateX(0)}
+#info-panel .big-av{width:120px;height:120px;border-radius:50%;margin:10px auto 16px;background:var(--blue);display:flex;align-items:center;justify-content:center;font-size:40px;overflow:hidden}
+#info-panel .big-av img{width:100%;height:100%;object-fit:cover}
+#info-panel h2{text-align:center;font-size:20px;font-weight:500;margin-bottom:4px}
+#info-panel .sub{text-align:center;color:var(--muted);font-size:13px;margin-bottom:16px}
+#info-panel .row{padding:12px 0;border-top:1px solid rgba(0,0,0,.15);font-size:14px}
+#info-panel .row span{color:var(--muted);display:block;font-size:12px;margin-bottom:2px}
 #settings{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:90;display:none;align-items:center;justify-content:center}
 #settings.open{display:flex}
-.settings-box{width:min(400px,94vw);background:var(--panel);border-radius:14px;overflow:hidden;box-shadow:0 16px 48px rgba(0,0,0,.5)}
-.settings-head{padding:16px 20px;font-size:18px;font-weight:500;border-bottom:1px solid var(--divider)}
-.setting-row{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;cursor:default}
-.setting-row + .setting-row{border-top:1px solid rgba(0,0,0,.15)}
-.setting-row .label{font-size:15px}
-.setting-row .hint{font-size:12px;color:var(--muted);margin-top:2px}
-.toggle{width:42px;height:24px;border-radius:12px;background:#3a4654;position:relative;cursor:pointer;transition:.2s;flex-shrink:0}
+.settings-box{width:min(400px,94vw);background:var(--panel);border-radius:14px;overflow:hidden}
+.settings-head{padding:16px 18px;font-size:18px;font-weight:500;border-bottom:1px solid var(--divider)}
+.setting-row{display:flex;align-items:center;justify-content:space-between;padding:13px 18px}
+.setting-row + .setting-row{border-top:1px solid rgba(0,0,0,.12)}
+.setting-row .label{font-size:15px}.setting-row .hint{font-size:12px;color:var(--muted);margin-top:2px}
+.toggle{width:42px;height:24px;border-radius:12px;background:#3a4654;position:relative;cursor:pointer}
 .toggle.on{background:var(--blue)}
 .toggle i{position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;background:#fff;transition:.2s}
 .toggle.on i{left:20px}
-.settings-foot{padding:12px 16px 16px;display:flex;flex-direction:column;gap:8px}
+.settings-foot{padding:12px 14px 16px;display:flex;flex-direction:column;gap:8px}
 .settings-foot button{border:none;border-radius:10px;padding:12px;font-size:14px;font-weight:500;cursor:pointer}
-.btn-blue{background:var(--blue);color:#fff}
-.btn-red{background:transparent;color:var(--danger)}
-.btn-gray{background:var(--panel2);color:var(--text)}
-
+.btn-blue{background:var(--blue);color:#fff}.btn-red{background:transparent;color:var(--danger)}.btn-gray{background:var(--panel2);color:var(--text)}
 #dialogs::-webkit-scrollbar,#messages::-webkit-scrollbar{width:5px}
 #dialogs::-webkit-scrollbar-thumb,#messages::-webkit-scrollbar-thumb{background:#2a3848;border-radius:3px}
+#lightbox{position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:100;display:none;align-items:center;justify-content:center;cursor:zoom-out}
+#lightbox.open{display:flex}
+#lightbox img{max-width:92vw;max-height:90vh;border-radius:8px}
 </style>
 </head>
 <body>
-
 <div id="login">
   <div class="login-box">
     <div class="login-logo"><span>T</span></div>
     <h1>Teleham</h1>
-    <p class="sub">Введи номер телефона, чтобы войти.<br>Код придёт в Telegram или по SMS.</p>
-    <input id="phone" type="tel" placeholder="+79001234567" autocomplete="tel"/>
-    <button class="btn" id="btn-code" onclick="sendCode()">ДАЛЕЕ</button>
+    <p class="sub">Введи номер телефона.<br>Код придёт в Telegram или SMS.</p>
+    <input id="phone" type="tel" placeholder="+79001234567"/>
+    <button class="btn" onclick="sendCode()">ДАЛЕЕ</button>
     <input id="code" type="text" placeholder="Код" style="display:none;margin-top:8px"/>
     <input id="password" type="password" placeholder="Пароль 2FA" style="display:none"/>
     <button class="btn" id="btn-login" onclick="signIn()" style="display:none;margin-top:8px">ВОЙТИ</button>
     <div id="login-err"></div>
   </div>
 </div>
-
 <div id="app">
   <div id="sidebar">
     <div id="side-head">
       <div class="me-av" id="me-av" onclick="openSettings()">T</div>
-      <div class="side-title">
-        <b id="me-name">Teleham</b>
-        <span id="me-status">в сети</span>
-      </div>
-      <button class="icon-btn" title="Настройки" onclick="openSettings()">☰</button>
+      <div class="side-title"><b id="me-name">Teleham</b><span>в сети</span></div>
+      <button class="icon-btn" onclick="openSettings()" title="Настройки">☰</button>
     </div>
-    <div id="search-wrap">
-      <input id="search" placeholder="Поиск" oninput="filterDialogs()"/>
-    </div>
+    <div id="search-wrap"><input id="search" placeholder="Поиск" oninput="filterDialogs()"/></div>
     <div id="dialogs"></div>
   </div>
-
   <div id="main">
-    <div id="chat-head">
+    <div id="chat-head" onclick="openInfo()">
       <div class="av" id="chat-av">?</div>
-      <div class="info">
-        <b id="chat-name">Чат</b>
-        <span id="chat-sub">был(а) недавно</span>
+      <div class="info"><b id="chat-name">Чат</b><span id="chat-sub"></span></div>
+      <div id="chat-tools" onclick="event.stopPropagation()">
+        <button class="icon-btn" title="Поиск в чате" onclick="toggleChatSearch()">🔍</button>
       </div>
+    </div>
+    <div id="chat-search">
+      <input id="chat-q" placeholder="Поиск в чате" onkeydown="if(event.key==='Enter')searchInChat()"/>
+      <button class="icon-btn" onclick="searchInChat()">➜</button>
+      <button class="icon-btn" onclick="toggleChatSearch()">✕</button>
     </div>
     <div id="messages-wrap">
       <div id="snow"></div>
       <div id="empty"><div class="pill">Выберите, кому хотели бы написать</div></div>
       <div id="messages"><div id="msg-list"></div></div>
+      <button id="scroll-down" onclick="scrollBottom()">↓</button>
+    </div>
+    <div id="reply-bar">
+      <div class="rb-text"><b>Ответ</b><span id="reply-preview"></span></div>
+      <button class="icon-btn" onclick="clearReply()">✕</button>
     </div>
     <div id="composer">
-      <input id="text" placeholder="Сообщение" autocomplete="off"/>
+      <label class="attach" title="Файл / фото">📎<input type="file" id="file" hidden onchange="sendFile()"/></label>
+      <input type="text" id="text" placeholder="Сообщение" autocomplete="off"/>
       <button onclick="sendMsg()" title="Отправить">➤</button>
     </div>
   </div>
 </div>
-
+<div id="info-panel">
+  <button class="icon-btn" style="float:right" onclick="closeInfo()">✕</button>
+  <div class="big-av" id="info-av">?</div>
+  <h2 id="info-name"></h2>
+  <div class="sub" id="info-status"></div>
+  <div class="row" id="info-rows"></div>
+</div>
 <div id="settings">
   <div class="settings-box">
-    <div class="settings-head">Настройки Teleham</div>
-    <div class="setting-row">
-      <div>
-        <div class="label">Снег в чатах</div>
-        <div class="hint">Падающие снежинки</div>
-      </div>
-      <div class="toggle on" id="tog-snow" onclick="toggleSnow(this)"><i></i></div>
-    </div>
-    <div class="setting-row">
-      <div>
-        <div class="label">Удалённые сообщения</div>
-        <div class="hint">Показывать текст после удаления</div>
-      </div>
-      <div class="toggle on" id="tog-deleted" onclick="togglePref(this,'showDeleted')"><i></i></div>
-    </div>
-    <div class="setting-row">
-      <div>
-        <div class="label">История изменений</div>
-        <div class="hint">Что было до правки сообщения</div>
-      </div>
-      <div class="toggle on" id="tog-edits" onclick="togglePref(this,'showEdits')"><i></i></div>
-    </div>
+    <div class="settings-head">Настройки</div>
+    <div class="setting-row"><div><div class="label">Снег</div><div class="hint">Снежинки в чате</div></div><div class="toggle on" id="tog-snow" onclick="toggleSnow(this)"><i></i></div></div>
+    <div class="setting-row"><div><div class="label">Удалённые</div><div class="hint">Текст удалённых сообщений</div></div><div class="toggle on" id="tog-deleted" onclick="togglePref(this,'showDeleted')"><i></i></div></div>
+    <div class="setting-row"><div><div class="label">Правки</div><div class="hint">История изменений</div></div><div class="toggle on" id="tog-edits" onclick="togglePref(this,'showEdits')"><i></i></div></div>
     <div class="settings-foot">
       <button class="btn-blue" onclick="loadDialogs();closeSettings()">Обновить чаты</button>
       <button class="btn-red" onclick="logout()">Выйти</button>
@@ -224,269 +191,48 @@ button,input{font-family:inherit}
     </div>
   </div>
 </div>
-
+<div id="lightbox" onclick="this.classList.remove('open')"><img id="lb-img" src=""/></div>
 <script>
-const prefs = {
-  snow: localStorage.getItem('th_snow') !== '0',
-  showDeleted: localStorage.getItem('th_deleted') !== '0',
-  showEdits: localStorage.getItem('th_edits') !== '0',
-};
-
-let currentChat = null;
-let currentChatMeta = null;
-let allDialogs = [];
-
-function $(id){ return document.getElementById(id); }
-
-function snow() {
-  const box = $('snow');
-  box.innerHTML = '';
-  if (!prefs.snow) return;
-  for (let i = 0; i < 55; i++) {
-    const f = document.createElement('div');
-    f.className = 'flake';
-    const s = 1.5 + Math.random() * 3.5;
-    f.style.width = s + 'px';
-    f.style.height = s + 'px';
-    f.style.left = Math.random() * 100 + '%';
-    f.style.animationDuration = (7 + Math.random() * 12) + 's';
-    f.style.animationDelay = (-Math.random() * 15) + 's';
-    f.style.opacity = 0.3 + Math.random() * 0.45;
-    box.appendChild(f);
-  }
-}
-
-async function api(path, opts={}) {
-  const r = await fetch(path, { headers: {'Content-Type': 'application/json'}, ...opts });
-  return r.json();
-}
-
-function showErr(t, ok=false) {
-  const el = $('login-err');
-  el.textContent = t || '';
-  el.style.color = ok ? 'var(--muted)' : 'var(--danger)';
-}
-
-function avHtml(avatar, letter, cls='av') {
-  if (avatar) return `<div class="${cls}"><img src="${avatar}" alt=""/></div>`;
-  return `<div class="${cls}">${escapeHtml(letter || '?')}</div>`;
-}
-
-function fmtTime(ts) {
-  if (!ts) return '';
-  const d = new Date(ts * 1000);
-  const now = new Date();
-  if (d.toDateString() === now.toDateString()) {
-    return d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
-  }
-  return d.toLocaleDateString([], {day:'numeric', month:'short'});
-}
-
-function fmtDateSep(ts) {
-  if (!ts) return '';
-  return new Date(ts * 1000).toLocaleDateString([], {day:'numeric', month:'long', year:'numeric'});
-}
-
-async function checkStatus() {
-  const s = await api('/api/status');
-  if (s.authorized) {
-    $('login').style.display = 'none';
-    $('app').style.display = 'flex';
-    if (s.me) {
-      $('me-name').textContent = s.me.name || 'Teleham';
-      const av = $('me-av');
-      if (s.me.avatar) av.innerHTML = `<img src="${s.me.avatar}" alt=""/>`;
-      else av.textContent = s.me.letter || 'T';
-    }
-    snow();
-    syncToggles();
-    loadDialogs();
-    connectWs();
-  }
-}
-
-async function sendCode() {
-  showErr('');
-  const phone = $('phone').value.trim();
-  const res = await api('/api/send_code', {method:'POST', body: JSON.stringify({phone})});
-  if (!res.ok) { showErr(res.error); return; }
-  $('code').style.display = 'block';
-  $('btn-login').style.display = 'block';
-  showErr(res.message || 'Код отправлен', true);
-}
-
-async function signIn() {
-  showErr('');
-  const code = $('code').value.trim();
-  const password = $('password').value.trim();
-  const res = await api('/api/sign_in', {method:'POST', body: JSON.stringify({code, password})});
-  if (res.need_password) {
-    $('password').style.display = 'block';
-    showErr(res.error || 'Нужен пароль 2FA');
-    return;
-  }
-  if (!res.ok) { showErr(res.error); return; }
-  location.reload();
-}
-
-async function loadDialogs() {
-  const res = await api('/api/dialogs');
-  if (!res.ok) return;
-  allDialogs = res.dialogs || [];
-  renderDialogs(allDialogs);
-}
-
-function filterDialogs() {
-  const q = $('search').value.trim().toLowerCase();
-  if (!q) { renderDialogs(allDialogs); return; }
-  renderDialogs(allDialogs.filter(d => (d.name||'').toLowerCase().includes(q)));
-}
-
-function renderDialogs(list) {
-  const box = $('dialogs');
-  box.innerHTML = '';
-  list.forEach(d => {
-    const el = document.createElement('div');
-    el.className = 'dialog' + (currentChat === d.id ? ' active' : '');
-    el.innerHTML = `
-      ${avHtml(d.avatar, d.letter)}
-      <div class="d-meta">
-        <div class="d-top">
-          <div class="d-name">${escapeHtml(d.name)}</div>
-          <div class="d-time"></div>
-        </div>
-        <div class="d-bottom">
-          <div class="d-last">${escapeHtml(d.last || '')}</div>
-          ${d.unread ? `<div class="d-unread">${d.unread}</div>` : ''}
-        </div>
-      </div>`;
-    el.onclick = () => openChat(d);
-    box.appendChild(el);
-  });
-}
-
-async function openChat(d) {
-  currentChat = d.id;
-  currentChatMeta = d;
-  $('empty').style.display = 'none';
-  $('messages').style.display = 'block';
-  $('composer').style.display = 'flex';
-  $('chat-head').style.display = 'flex';
-  $('chat-name').textContent = d.name;
-  $('chat-sub').textContent = 'Teleham';
-  const av = $('chat-av');
-  if (d.avatar) av.innerHTML = `<img src="${d.avatar}" alt=""/>`;
-  else { av.innerHTML = ''; av.textContent = d.letter || '?'; }
-  renderDialogs(allDialogs);
-
-  const res = await api('/api/messages/' + d.id);
-  const list = $('msg-list');
-  list.innerHTML = '';
-  if (!res.ok) return;
-
-  let lastDay = '';
-  (res.messages || []).forEach(m => {
-    if (m.deleted && !prefs.showDeleted) return;
-    const day = m.date ? fmtDateSep(m.date) : '';
-    if (day && day !== lastDay) {
-      lastDay = day;
-      const sep = document.createElement('div');
-      sep.className = 'date-sep';
-      sep.textContent = day;
-      list.appendChild(sep);
-    }
-    list.appendChild(renderMsg(m));
-  });
-  const sc = $('messages');
-  sc.scrollTop = sc.scrollHeight;
-}
-
-function renderMsg(m) {
-  const el = document.createElement('div');
-  el.className = 'msg ' + (m.out ? 'out' : 'in') + (m.deleted ? ' deleted' : '');
-  el.dataset.id = m.id;
-  let html = '';
-  if (m.deleted) {
-    html += `<div class="del-badge">🗑 Удаленное сообщение</div>`;
-  }
-  const body = (m.media ? m.media + ' ' : '') + (m.text || '');
-  html += `<div>${escapeHtml(body)}</div>`;
-  if (prefs.showEdits && m.edit_history && m.edit_history.length) {
-    html += `<div class="edit-hist">Было: ${escapeHtml(m.edit_history.slice(-3).join(' ← '))}</div>`;
-  }
-  html += `<div class="foot">`;
-  if (m.edited) html += `<span class="edited-mark">изм.</span>`;
-  html += `<span class="time">${fmtTime(m.date)}</span></div>`;
-  el.innerHTML = html;
-  return el;
-}
-
-async function sendMsg() {
-  const input = $('text');
-  const text = input.value.trim();
-  if (!text || !currentChat) return;
-  input.value = '';
-  const res = await api('/api/send', {method:'POST', body: JSON.stringify({chat_id: currentChat, text})});
-  if (res.ok && res.message) {
-    $('msg-list').appendChild(renderMsg(res.message));
-    $('messages').scrollTop = $('messages').scrollHeight;
-  }
-}
-
-$('text').addEventListener('keydown', e => { if (e.key === 'Enter') sendMsg(); });
-
-function escapeHtml(s) {
-  return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-}
-
-function connectWs() {
-  const proto = location.protocol === 'https:' ? 'wss' : 'ws';
-  const ws = new WebSocket(`${proto}://${location.host}/ws`);
-  ws.onmessage = (ev) => {
-    let msg;
-    try { msg = JSON.parse(ev.data); } catch { return; }
-    if (msg.type === 'new_message' && msg.data.chat_id == currentChat) {
-      $('msg-list').appendChild(renderMsg(msg.data.message));
-      $('messages').scrollTop = $('messages').scrollHeight;
-    }
-    if ((msg.type === 'deleted_message' || msg.type === 'edited_message') && currentChatMeta) {
-      openChat(currentChatMeta);
-    }
-  };
-  ws.onclose = () => setTimeout(connectWs, 2500);
-}
-
-function openSettings(){ $('settings').classList.add('open'); }
-function closeSettings(){ $('settings').classList.remove('open'); }
-
-function syncToggles() {
-  $('tog-snow').classList.toggle('on', prefs.snow);
-  $('tog-deleted').classList.toggle('on', prefs.showDeleted);
-  $('tog-edits').classList.toggle('on', prefs.showEdits);
-}
-
-function toggleSnow(el) {
-  prefs.snow = !prefs.snow;
-  el.classList.toggle('on', prefs.snow);
-  localStorage.setItem('th_snow', prefs.snow ? '1' : '0');
-  snow();
-}
-
-function togglePref(el, key) {
-  prefs[key] = !prefs[key];
-  el.classList.toggle('on', prefs[key]);
-  localStorage.setItem(key === 'showDeleted' ? 'th_deleted' : 'th_edits', prefs[key] ? '1' : '0');
-  if (currentChatMeta) openChat(currentChatMeta);
-}
-
-async function logout() {
-  if (!confirm('Выйти из аккаунта?')) return;
-  await api('/api/logout', {method:'POST', body:'{}'});
-  location.reload();
-}
-
-$('settings').addEventListener('click', e => { if (e.target.id === 'settings') closeSettings(); });
-
+const prefs={snow:localStorage.getItem('th_snow')!=='0',showDeleted:localStorage.getItem('th_deleted')!=='0',showEdits:localStorage.getItem('th_edits')!=='0'};
+let currentChat=null,currentChatMeta=null,allDialogs=[],replyTo=null;
+function $(id){return document.getElementById(id)}
+function snow(){const box=$('snow');box.innerHTML='';if(!prefs.snow)return;for(let i=0;i<50;i++){const f=document.createElement('div');f.className='flake';const s=1.5+Math.random()*3;f.style.width=s+'px';f.style.height=s+'px';f.style.left=Math.random()*100+'%';f.style.animationDuration=(7+Math.random()*12)+'s';f.style.animationDelay=(-Math.random()*14)+'s';f.style.opacity=0.3+Math.random()*0.45;box.appendChild(f)}}
+async function api(path,opts={}){const r=await fetch(path,{headers:{'Content-Type':'application/json'},...opts});return r.json()}
+function showErr(t,ok=false){const el=$('login-err');el.textContent=t||'';el.style.color=ok?'var(--muted)':'var(--danger)'}
+function avHtml(a,l,c='av'){if(a)return`<div class="${c}"><img src="${a}" alt=""/></div>`;return`<div class="${c}">${esc(l||'?')}</div>`}
+function esc(s){return String(s||'').replace(/[&<>"']/g,c=>({'&':'&','<':'<','>':'>','"':'"',"'":'&#39;'}[c]))}
+function linkify(t){return esc(t).replace(/(https?:\/\/[^\s<]+)/g,'<a href="$1" target="_blank" rel="noopener">$1</a>')}
+function fmtTime(ts){if(!ts)return'';const d=new Date(ts*1000),n=new Date();if(d.toDateString()===n.toDateString())return d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});return d.toLocaleDateString([],{day:'numeric',month:'short'})}
+function fmtDateSep(ts){if(!ts)return'';return new Date(ts*1000).toLocaleDateString([],{day:'numeric',month:'long',year:'numeric'})}
+async function checkStatus(){const s=await api('/api/status');if(s.authorized){$('login').style.display='none';$('app').style.display='flex';if(s.me){$('me-name').textContent=s.me.name||'Teleham';const av=$('me-av');if(s.me.avatar)av.innerHTML=`<img src="${s.me.avatar}"/>`;else av.textContent=s.me.letter||'T'}snow();syncToggles();loadDialogs();connectWs();document.title='Teleham'}}
+async function sendCode(){showErr('');const phone=$('phone').value.trim();const res=await api('/api/send_code',{method:'POST',body:JSON.stringify({phone})});if(!res.ok){showErr(res.error);return}$('code').style.display='block';$('btn-login').style.display='block';showErr(res.message||'Код отправлен',true)}
+async function signIn(){showErr('');const code=$('code').value.trim(),password=$('password').value.trim();const res=await api('/api/sign_in',{method:'POST',body:JSON.stringify({code,password})});if(res.need_password){$('password').style.display='block';showErr(res.error||'Нужен 2FA');return}if(!res.ok){showErr(res.error);return}location.reload()}
+async function loadDialogs(){const res=await api('/api/dialogs');if(!res.ok)return;allDialogs=res.dialogs||[];renderDialogs(allDialogs);const unread=allDialogs.reduce((a,d)=>a+(d.unread||0),0);document.title=unread?`(${unread}) Teleham`:'Teleham'}
+function filterDialogs(){const q=$('search').value.trim().toLowerCase();renderDialogs(q?allDialogs.filter(d=>(d.name||'').toLowerCase().includes(q)):allDialogs)}
+function renderDialogs(list){const box=$('dialogs');box.innerHTML='';list.forEach(d=>{const el=document.createElement('div');el.className='dialog'+(currentChat===d.id?' active':'');el.innerHTML=`${avHtml(d.avatar,d.letter)}<div class="d-meta"><div class="d-top"><div class="d-name">${d.pinned?'<span class="pin">📌</span>':''}${esc(d.name)}</div><div class="d-time">${fmtTime(d.last_date)}</div></div><div class="d-bottom"><div class="d-last">${esc(d.last||'')}</div>${d.unread?`<div class="d-unread">${d.unread}</div>`:''}</div></div>`;el.onclick=()=>openChat(d);box.appendChild(el)})}
+async function openChat(d){currentChat=d.id;currentChatMeta=d;clearReply();$('empty').style.display='none';$('messages').style.display='block';$('composer').style.display='flex';$('chat-head').style.display='flex';$('chat-name').textContent=d.name;$('chat-sub').textContent=d.status||'';const av=$('chat-av');if(d.avatar)av.innerHTML=`<img src="${d.avatar}"/>`;else{av.innerHTML='';av.textContent=d.letter||'?'}renderDialogs(allDialogs);await loadMessages()}
+async function loadMessages(q){const url='/api/messages/'+currentChat+(q?('?q='+encodeURIComponent(q)):'');const res=await api(url);const list=$('msg-list');list.innerHTML='';if(!res.ok)return;let lastDay='';(res.messages||[]).forEach(m=>{if(m.deleted&&!prefs.showDeleted)return;const day=m.date?fmtDateSep(m.date):'';if(day&&day!==lastDay){lastDay=day;const sep=document.createElement('div');sep.className='date-sep';sep.textContent=day;list.appendChild(sep)}list.appendChild(renderMsg(m))});scrollBottom()}
+function renderMsg(m){const el=document.createElement('div');el.className='msg '+(m.out?'out':'in')+(m.deleted?' deleted':'');el.dataset.id=m.id;el.oncontextmenu=e=>{e.preventDefault();setReply(m)};el.ondblclick=()=>setReply(m);let h='';if(m.deleted)h+='<div class="del-badge">🗑 Удаленное сообщение</div>';if(m.fwd)h+='<div class="fwd">Переслано</div>';if(m.reply)h+=`<div class="reply-box"><b>В ответ</b>${esc(m.reply.text||'...')}</div>`;if(m.media&&m.media.type==='photo')h+=`<img class="photo" src="${m.media.url}" onclick="event.stopPropagation();openLb('${m.media.url}')"/>`;else if(m.media&&m.media.type==='file')h+=`<div class="file">📎 ${esc(m.media.name||'Файл')}</div>`;if(m.text)h+=`<div>${linkify(m.text)}</div>`;if(prefs.showEdits&&m.edit_history&&m.edit_history.length)h+=`<div class="edit-hist">Было: ${esc(m.edit_history.slice(-3).join(' ← '))}</div>`;h+='<div class="foot">';if(m.views)h+=`<span class="time">${m.views} 👁</span> `;if(m.edited)h+='<span class="edited-mark">изм.</span>';h+=`<span class="time">${fmtTime(m.date)}</span></div>`;el.innerHTML=h;return el}
+function setReply(m){replyTo=m.id;$('reply-bar').style.display='flex';$('reply-preview').textContent=(m.text||'[медиа]').slice(0,80);$('text').focus()}
+function clearReply(){replyTo=null;$('reply-bar').style.display='none'}
+async function sendMsg(){const input=$('text');const text=input.value.trim();if(!text||!currentChat)return;input.value='';const body={chat_id:currentChat,text};if(replyTo)body.reply_to=replyTo;clearReply();const res=await api('/api/send',{method:'POST',body:JSON.stringify(body)});if(res.ok&&res.message){$('msg-list').appendChild(renderMsg(res.message));scrollBottom()}api('/api/typing',{method:'POST',body:JSON.stringify({chat_id:currentChat})})}
+async function sendFile(){const f=$('file').files[0];if(!f||!currentChat)return;const fd=new FormData();fd.append('chat_id',currentChat);fd.append('file',f);const r=await fetch('/api/send_file',{method:'POST',body:fd});const res=await r.json();$('file').value='';if(res.ok&&res.message){$('msg-list').appendChild(renderMsg(res.message));scrollBottom()}}
+$('text').addEventListener('keydown',e=>{if(e.key==='Enter')sendMsg();else if(currentChat)api('/api/typing',{method:'POST',body:JSON.stringify({chat_id:currentChat})})});
+function scrollBottom(){const sc=$('messages');sc.scrollTop=sc.scrollHeight;$('scroll-down').style.display='none'}
+$('messages').addEventListener('scroll',()=>{const sc=$('messages');$('scroll-down').style.display=(sc.scrollHeight-sc.scrollTop-sc.clientHeight>200)?'block':'none'});
+function toggleChatSearch(){const el=$('chat-search');el.style.display=el.style.display==='flex'?'none':'flex';if(el.style.display==='flex'){$('chat-q').focus()}else{loadMessages()}}
+async function searchInChat(){const q=$('chat-q').value.trim();await loadMessages(q||undefined)}
+async function openInfo(){if(!currentChat)return;const res=await api('/api/chat/'+currentChat);if(!res.ok)return;const i=res.info;$('info-name').textContent=i.name;$('info-status').textContent=i.status||'';const av=$('info-av');if(i.avatar)av.innerHTML=`<img src="${i.avatar}"/>`;else{av.innerHTML='';av.textContent=i.letter||'?'}let rows='';if(i.username)rows+=`<div class="row"><span>Имя пользователя</span>@${esc(i.username)}</div>`;if(i.phone)rows+=`<div class="row"><span>Телефон</span>+${esc(i.phone)}</div>`;if(i.about)rows+=`<div class="row"><span>О себе</span>${esc(i.about)}</div>`;if(i.members)rows+=`<div class="row"><span>Участники</span>${i.members}</div>`;rows+=`<div class="row"><span>Тип</span>${esc(i.kind)}</div>`;$('info-rows').innerHTML=rows;$('info-panel').classList.add('open')}
+function closeInfo(){$('info-panel').classList.remove('open')}
+function openLb(url){$('lb-img').src=url;$('lightbox').classList.add('open')}
+function connectWs(){const p=location.protocol==='https:'?'wss':'ws';const ws=new WebSocket(`${p}://${location.host}/ws`);ws.onmessage=ev=>{let msg;try{msg=JSON.parse(ev.data)}catch{return}if(msg.type==='new_message'&&msg.data.chat_id==currentChat){$('msg-list').appendChild(renderMsg(msg.data.message));const sc=$('messages');if(sc.scrollHeight-sc.scrollTop-sc.clientHeight<120)scrollBottom()}if((msg.type==='deleted_message'||msg.type==='edited_message')&&currentChatMeta)openChat(currentChatMeta);if(msg.type==='new_message')loadDialogs()};ws.onclose=()=>setTimeout(connectWs,2500)}
+function openSettings(){$('settings').classList.add('open')}
+function closeSettings(){$('settings').classList.remove('open')}
+function syncToggles(){$('tog-snow').classList.toggle('on',prefs.snow);$('tog-deleted').classList.toggle('on',prefs.showDeleted);$('tog-edits').classList.toggle('on',prefs.showEdits)}
+function toggleSnow(el){prefs.snow=!prefs.snow;el.classList.toggle('on',prefs.snow);localStorage.setItem('th_snow',prefs.snow?'1':'0');snow()}
+function togglePref(el,key){prefs[key]=!prefs[key];el.classList.toggle('on',prefs[key]);localStorage.setItem(key==='showDeleted'?'th_deleted':'th_edits',prefs[key]?'1':'0');if(currentChatMeta)openChat(currentChatMeta)}
+async function logout(){if(!confirm('Выйти?'))return;await api('/api/logout',{method:'POST',body:'{}'});location.reload()}
+$('settings').addEventListener('click',e=>{if(e.target.id==='settings')closeSettings()});
 checkStatus();
 </script>
 </body>

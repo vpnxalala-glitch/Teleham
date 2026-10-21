@@ -2,15 +2,15 @@
 # -*- coding: utf-8 -*-
 """Teleham Web — Telegram-like client for PC."""
 
+import asyncio
 import json
 import mimetypes
-import re
 from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
 
 from aiohttp import web
-from telethon import TelegramClient, events, functions, types
+from telethon import TelegramClient, events, types
 from telethon.errors import SessionPasswordNeededError, PhoneCodeInvalidError, FloodWaitError
 from telethon.tl.types import User, Chat, Channel, MessageMediaPhoto, MessageMediaDocument
 
@@ -31,6 +31,11 @@ ws_clients = set()
 _handlers_ready = False
 
 
+def sid(value):
+    """String id — JS cannot safely hold large Telegram ids as numbers."""
+    return str(value)
+
+
 def entity_title(entity):
     if isinstance(entity, User):
         parts = [entity.first_name or "", entity.last_name or ""]
@@ -45,7 +50,17 @@ def entity_letter(name):
     return name[0].upper() if name else "?"
 
 
-async def ensure_avatar(entity):
+def avatar_url_if_cached(entity):
+    eid = getattr(entity, "id", None)
+    if eid is None:
+        return None
+    path = AVATAR_DIR / f"{eid}.jpg"
+    if path.exists() and path.stat().st_size > 0:
+        return f"/static/avatars/{eid}.jpg"
+    return None
+
+
+async def download_avatar(entity):
     try:
         eid = getattr(entity, "id", None)
         if eid is None:
@@ -62,13 +77,11 @@ async def ensure_avatar(entity):
 
 
 async def ensure_media(message):
-    """Download photo/document preview if possible."""
     try:
         if not message.media:
             return None
         mid = message.id
         cid = message.chat_id
-        # photo
         if isinstance(message.media, MessageMediaPhoto) or message.photo:
             path = MEDIA_DIR / f"{cid}_{mid}.jpg"
             if path.exists() and path.stat().st_size > 0:
@@ -76,15 +89,13 @@ async def ensure_media(message):
             await client.download_media(message, file=str(path))
             if path.exists() and path.stat().st_size > 0:
                 return {"type": "photo", "url": f"/static/media/{cid}_{mid}.jpg"}
-        # document image / sticker-ish
         if isinstance(message.media, MessageMediaDocument) and message.document:
             mime = getattr(message.document, "mime_type", "") or ""
             if mime.startswith("image/"):
                 ext = mimetypes.guess_extension(mime) or ".bin"
                 path = MEDIA_DIR / f"{cid}_{mid}{ext}"
-                if path.exists() and path.stat().st_size > 0:
-                    return {"type": "photo", "url": f"/static/media/{path.name}"}
-                await client.download_media(message, file=str(path))
+                if not path.exists() or path.stat().st_size == 0:
+                    await client.download_media(message, file=str(path))
                 if path.exists() and path.stat().st_size > 0:
                     return {"type": "photo", "url": f"/static/media/{path.name}"}
             name = None
@@ -133,8 +144,6 @@ async def serialize_message(m, chat_id):
     try:
         if m.sender:
             sender_name = entity_title(m.sender)
-        elif m.sender_id:
-            sender_name = str(m.sender_id)
     except Exception:
         pass
     return {
@@ -156,7 +165,7 @@ async def serialize_message(m, chat_id):
 async def broadcast(event_type, data):
     payload = json.dumps({"type": event_type, "data": data}, ensure_ascii=False)
     dead = []
-    for ws in ws_clients:
+    for ws in list(ws_clients):
         try:
             await ws.send_str(payload)
         except Exception:
@@ -177,7 +186,7 @@ async def register_handlers():
         text = event.message.message or ""
         msg_cache[(chat_id, event.message.id)] = text
         msg = await serialize_message(event.message, chat_id)
-        await broadcast("new_message", {"chat_id": chat_id, "message": msg})
+        await broadcast("new_message", {"chat_id": sid(chat_id), "message": msg})
 
     @client.on(events.MessageDeleted)
     async def on_deleted(event):
@@ -185,7 +194,9 @@ async def register_handlers():
             for (cid, mid), text in list(msg_cache.items()):
                 if mid == msg_id:
                     deleted_msgs[(cid, mid)] = {"text": text, "date": datetime.now().timestamp()}
-                    await broadcast("deleted_message", {"chat_id": cid, "message_id": mid, "text": text})
+                    await broadcast("deleted_message", {
+                        "chat_id": sid(cid), "message_id": mid, "text": text
+                    })
                     break
 
     @client.on(events.MessageEdited)
@@ -199,22 +210,21 @@ async def register_handlers():
             edits[key].append(old)
         msg_cache[key] = new
         msg = await serialize_message(event.message, chat_id)
-        await broadcast("edited_message", {"chat_id": chat_id, "message": msg})
-
-    @client.on(events.UserUpdate)
-    async def on_user(event):
-        await broadcast("user_update", {"user_id": event.user_id})
+        await broadcast("edited_message", {"chat_id": sid(chat_id), "message": msg})
 
 
 async def api_status(request):
-    authorized = await client.is_user_authorized()
+    try:
+        authorized = await client.is_user_authorized()
+    except Exception:
+        authorized = False
     me = None
     if authorized:
         try:
             u = await client.get_me()
-            av = await ensure_avatar(u)
+            av = avatar_url_if_cached(u) or await download_avatar(u)
             me = {
-                "id": u.id,
+                "id": sid(u.id),
                 "name": entity_title(u),
                 "username": u.username,
                 "avatar": av,
@@ -238,14 +248,14 @@ async def api_send_code(request):
         if not phone:
             return web.json_response({"ok": False, "error": "Введи номер"}, status=400)
         if not phone.startswith("+"):
-            return web.json_response({"ok": False, "error": "Номер с + (например +79001234567)"}, status=400)
+            return web.json_response({"ok": False, "error": "Номер с +"}, status=400)
         if not client.is_connected():
             await client.connect()
         result = await client.send_code_request(phone)
         login_state["phone"] = phone
         login_state["phone_code_hash"] = result.phone_code_hash
         login_state["need_password"] = False
-        return web.json_response({"ok": True, "message": "Код отправлен — смотри в Telegram / SMS"})
+        return web.json_response({"ok": True, "message": "Код отправлен — смотри Telegram / SMS"})
     except FloodWaitError as e:
         return web.json_response({"ok": False, "error": f"Подожди {e.seconds} сек."}, status=429)
     except Exception as e:
@@ -261,7 +271,7 @@ async def api_sign_in(request):
             await client.connect()
         if login_state["need_password"] or password:
             if not password:
-                return web.json_response({"ok": False, "error": "Введи пароль 2FA", "need_password": True}, status=400)
+                return web.json_response({"ok": False, "error": "Пароль 2FA", "need_password": True}, status=400)
             await client.sign_in(password=password)
             login_state["need_password"] = False
             await register_handlers()
@@ -289,47 +299,66 @@ async def api_dialogs(request):
     if not await client.is_user_authorized():
         return web.json_response({"ok": False, "error": "Не авторизован"}, status=401)
     items = []
-    async for d in client.iter_dialogs(limit=150):
-        av = await ensure_avatar(d.entity)
-        name = d.name or entity_title(d.entity)
-        last = ""
-        last_date = None
-        if d.message:
-            last_date = d.message.date.timestamp() if d.message.date else None
-            if d.message.message:
-                last = d.message.message[:90]
-            elif d.message.media:
-                last = "📷 Фото" if d.message.photo else "📎 Файл"
-        kind = "user"
-        if isinstance(d.entity, Channel):
-            kind = "channel" if d.entity.broadcast else "group"
-        elif isinstance(d.entity, Chat):
-            kind = "group"
-        items.append({
-            "id": d.id,
-            "name": name,
-            "letter": entity_letter(name),
-            "avatar": av,
-            "unread": d.unread_count,
-            "last": last,
-            "last_date": last_date,
-            "pinned": d.pinned,
-            "muted": d.archived,  # simplified
-            "kind": kind,
-            "status": user_status_text(d.entity),
-        })
-    return web.json_response({"ok": True, "dialogs": items})
+    try:
+        async for d in client.iter_dialogs(limit=200):
+            try:
+                name = d.name or entity_title(d.entity)
+                last = ""
+                last_date = None
+                if d.message:
+                    last_date = d.message.date.timestamp() if d.message.date else None
+                    if d.message.message:
+                        last = d.message.message[:90]
+                    elif d.message.photo:
+                        last = "📷 Фото"
+                    elif d.message.media:
+                        last = "📎 Файл"
+                kind = "user"
+                if isinstance(d.entity, Channel):
+                    kind = "channel" if getattr(d.entity, "broadcast", False) else "group"
+                elif isinstance(d.entity, Chat):
+                    kind = "group"
+                # only cached avatars here — fast list
+                av = avatar_url_if_cached(d.entity)
+                items.append({
+                    "id": sid(d.id),
+                    "name": name,
+                    "letter": entity_letter(name),
+                    "avatar": av,
+                    "unread": d.unread_count or 0,
+                    "last": last,
+                    "last_date": last_date,
+                    "pinned": bool(d.pinned),
+                    "kind": kind,
+                    "status": user_status_text(d.entity),
+                })
+            except Exception:
+                continue
+    except Exception as e:
+        return web.json_response({"ok": False, "error": str(e), "dialogs": []}, status=500)
+
+    # background: fetch missing avatars (non-blocking for response)
+    async def fill_avatars():
+        try:
+            async for d in client.iter_dialogs(limit=40):
+                if not avatar_url_if_cached(d.entity):
+                    await download_avatar(d.entity)
+        except Exception:
+            pass
+
+    asyncio.create_task(fill_avatars())
+    return web.json_response({"ok": True, "dialogs": items, "count": len(items)})
 
 
 async def api_messages(request):
     if not await client.is_user_authorized():
         return web.json_response({"ok": False, "error": "Не авторизован"}, status=401)
+    raw = request.match_info["chat_id"]
     try:
-        chat_id = int(request.match_info["chat_id"])
+        chat_id = int(raw)
     except ValueError:
         return web.json_response({"ok": False, "error": "bad id"}, status=400)
 
-    # mark read
     try:
         await client.send_read_acknowledge(chat_id)
     except Exception:
@@ -337,12 +366,15 @@ async def api_messages(request):
 
     q = request.query.get("q", "").strip()
     msgs = []
-    if q:
-        async for m in client.iter_messages(chat_id, search=q, limit=50):
+    try:
+        if q:
+            it = client.iter_messages(chat_id, search=q, limit=50)
+        else:
+            it = client.iter_messages(chat_id, limit=80)
+        async for m in it:
             msgs.append(await serialize_message(m, m.chat_id))
-    else:
-        async for m in client.iter_messages(chat_id, limit=80):
-            msgs.append(await serialize_message(m, m.chat_id))
+    except Exception as e:
+        return web.json_response({"ok": False, "error": str(e)}, status=400)
     msgs.reverse()
 
     for (cid, mid), info in deleted_msgs.items():
@@ -364,9 +396,9 @@ async def api_chat_info(request):
     except ValueError:
         return web.json_response({"ok": False}, status=400)
     entity = await client.get_entity(chat_id)
-    av = await ensure_avatar(entity)
+    av = avatar_url_if_cached(entity) or await download_avatar(entity)
     info = {
-        "id": chat_id,
+        "id": sid(chat_id),
         "name": entity_title(entity),
         "letter": entity_letter(entity_title(entity)),
         "avatar": av,
@@ -394,7 +426,7 @@ async def api_send(request):
     chat_id = data.get("chat_id")
     text = (data.get("text") or "").strip()
     reply_to = data.get("reply_to")
-    if not chat_id or not text:
+    if chat_id is None or not text:
         return web.json_response({"ok": False, "error": "Пусто"}, status=400)
     kwargs = {}
     if reply_to:
@@ -408,7 +440,7 @@ async def api_send_file(request):
         return web.json_response({"ok": False, "error": "Не авторизован"}, status=401)
     reader = await request.multipart()
     chat_id = None
-    file_field = None
+    file_path = None
     while True:
         part = await reader.next()
         if part is None:
@@ -416,13 +448,12 @@ async def api_send_file(request):
         if part.name == "chat_id":
             chat_id = (await part.text()).strip()
         elif part.name == "file":
-            file_field = part
             data = await part.read(decode=False)
             filename = part.filename or "file.bin"
             tmp = MEDIA_DIR / f"upload_{filename}"
             tmp.write_bytes(data)
             file_path = tmp
-    if not chat_id or not file_field:
+    if not chat_id or not file_path:
         return web.json_response({"ok": False, "error": "Нет файла"}, status=400)
     m = await client.send_file(int(chat_id), str(file_path))
     return web.json_response({"ok": True, "message": await serialize_message(m, m.chat_id)})
@@ -433,7 +464,7 @@ async def api_typing(request):
         return web.json_response({"ok": False}, status=401)
     data = await request.json()
     chat_id = data.get("chat_id")
-    if chat_id:
+    if chat_id is not None:
         try:
             await client.action(int(chat_id), "typing")
         except Exception:
